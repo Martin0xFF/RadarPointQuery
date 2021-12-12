@@ -5,13 +5,22 @@ from scipy.spatial.transform import Rotation as Rot
 from nuscenes.nuscenes import NuScenes
 from nuscenes.utils.data_classes import RadarPointCloud
 
+def crude_bgr(values):
+    minimum, maximum = np.min(values), np.max(values)
+    ratio = 2*(values-minimum)/(maximum - minimum)
+    b = np.maximum(0, 255*(1-ratio)).astype(int)
+    r = np.maximum(0, 255*(ratio-1)).astype(int)
+    g = 255 - b - r
+    return np.vstack([b, g, r])
+
+
 # Scipy uses quaterions of the form [x, y, z, w]
 # Nuscenes returns quaterions of the form [w, x, y, z]
 
 RadarPointCloud.disable_filters()
 
 nusc = NuScenes(version='v1.0-mini', dataroot="data", verbose=True)
-city_scene = nusc.scene[1]
+city_scene = nusc.scene[8]
 fs_token = city_scene['first_sample_token']
 current_sample = nusc.get('sample', fs_token)
 
@@ -53,8 +62,25 @@ while current_sample is not None:
     P_img = K@P_car
     P_img = P_img/P_img[2,:]
 
-    for point in P_img[0:2].T:
-        cv2.circle(cam_image, tuple(point.astype(int)), 3, (255,0,0))
+    speeds = np.sqrt(np.square(radar_points[8, :]) + np.square(radar_points[9, :]))
+    cross = radar_points[5, :]
+
+    ranges = np.sqrt(np.square(radar_points[0, :]) + np.square(radar_points[1, :]))
+    bgr = crude_bgr(speeds)
+
+    def weight_from_range(ranges, min_circle=2, max_circle=20):
+        # make closer circles are bigger
+        ranges = 1/(ranges + 1)
+        minimum, maximum = np.min(ranges), np.max(ranges)
+        ratio = (ranges-minimum)/(maximum - minimum)
+        return (max_circle - min_circle)*ratio + min_circle
+
+    sizes = weight_from_range(ranges).astype(int)
+
+    for index, point in enumerate(P_img[0:2].T):
+        # 8 - vx_comp, 9 - vy_comp
+        cv2.circle(cam_image, point.astype(int), sizes[index], bgr[:, index].tolist())
+
     cv2.imshow(cam_type, cam_image)
     cv2.waitKey(0)
 
