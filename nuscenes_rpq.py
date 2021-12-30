@@ -1,6 +1,6 @@
+import sys
 import numpy as np
 import cv2
-import sys
 
 from scipy.spatial.transform import Rotation as Rot
 from nuscenes.nuscenes import NuScenes
@@ -36,7 +36,11 @@ while current_sample is not None:
     radar_xyz = radar_points[0:3, :]
 
     # Radar extrinsics not that we do not need to invert rotation or pose
-    radar_calibrated_sensor = nusc.get('calibrated_sensor', radar_sample_data['calibrated_sensor_token'])
+    radar_calibrated_sensor = nusc.get(
+        'calibrated_sensor',
+        radar_sample_data['calibrated_sensor_token']
+    )
+
     t_car_radar = np.array(radar_calibrated_sensor['translation'])
     q = radar_calibrated_sensor['rotation']
     q = q[1:] + q[0:1] # move w to the back
@@ -48,7 +52,11 @@ while current_sample is not None:
     cam_img = cv2.imread("data/" + cam_sample_data['filename'])
 
     # Camera extrinsics matrix, note that we invert the rotation and pose
-    cam_calibrated_sensor = nusc.get('calibrated_sensor', cam_sample_data['calibrated_sensor_token'])
+    cam_calibrated_sensor = nusc.get(
+        'calibrated_sensor',
+        cam_sample_data['calibrated_sensor_token']
+    )
+
     t_car_cam = np.array(cam_calibrated_sensor['translation'])
     q = cam_calibrated_sensor['rotation']
     q = q[1:] + q[0:1] # move w to the back
@@ -62,7 +70,15 @@ while current_sample is not None:
     T_cam_radar = T_cam_car@T_car_radar
     K = np.array(cam_calibrated_sensor['camera_intrinsic'])
 
-    project_radarpoints_onto_img(cam_img, radar_xyz, radar_points[5,:], radar_points[8:10, :], K, T_cam_radar)
+    project_radarpoints_onto_img(
+        cam_img,
+        radar_xyz,
+        radar_points[5,:],
+        radar_points[8:10, :],
+        K,
+        T_cam_radar
+    )
+
     if plot:
         cv2.imshow(cam_type, cam_img)
         cv2.waitKey(0)

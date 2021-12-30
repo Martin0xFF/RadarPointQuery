@@ -3,6 +3,8 @@ data/
 env/
 info/
 *.swp
+vis/
+imgs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

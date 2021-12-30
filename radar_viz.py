@@ -1,16 +1,35 @@
+'''
+Visualize radar data by projecting the points into a provided image
+'''
+
 import numpy as np
 import cv2
 
 def colour_bgr(values):
+    '''
+    A Crude range to colour function:
+
+    Values - some n length array of data
+
+    Returns:
+        - nx3 ndarray of data corresponding to the
+        values of the input array
+    '''
     minimum, maximum = np.min(values), np.max(values)
     ratio = 2*(values-minimum)/(maximum - minimum)
-    b = np.maximum(0, 255*(1-ratio)).astype(int)
-    r = np.maximum(0, 255*(ratio-1)).astype(int)
-    g = 255 - b - r
-    return np.vstack([b, g, r])
+    blu = np.maximum(0, 255*(1-ratio)).astype(int)
+    red = np.maximum(0, 255*(ratio-1)).astype(int)
+    gre = 255 - blu - red
+    return np.vstack([blu, gre, red])
 
 def weight_from_range(ranges, min_circle=2, max_circle=20):
-    # make closer circles are bigger
+    '''
+    Convert an array of values to the sizes of a circle
+        -ranges is of length n
+    returns:
+        - array of length n with values proportional to min_circle to
+        max_circle
+    '''
     ranges = 1/(ranges + 1)
     minimum, maximum = np.min(ranges), np.max(ranges)
     ratio = (ranges-minimum)/(maximum - minimum)
@@ -38,14 +57,16 @@ def project_radarpoints_onto_img(img, points, radar_cross, velocity, K, T):
         commonly denoted as T_camera_radar
     '''
 
-    K_aug = np.vstack([np.hstack([K, np.zeros((3,1))]), [0,0,0,1]])
+    k_aug = np.vstack([np.hstack([K, np.zeros((3,1))]), [0,0,0,1]])
     points_aug = np.vstack([points, np.ones((1, points.shape[1]))])
     points_cam = T@points_aug
-    pixel_points = (K_aug@points_cam / points_cam[2,:])[:2, :]
+    pixel_points = (k_aug@points_cam / points_cam[2,:])[:2, :]
 
 
-    bgr = colour_bgr(np.sqrt(np.square(velocity[0, :]) + np.square(velocity[1, :])))
-    sizes = weight_from_range(np.sqrt(np.square(points[0, :]) + np.square(points[1, :]))).astype(int)
+    bgr = colour_bgr(np.sqrt(np.square(velocity[0, :]) +
+                             np.square(velocity[1, :])))
+
+    sizes = weight_from_range(np.sqrt(np.square(points[0, :]) +
+                                      np.square(points[1, :]))).astype(int)
     for i, point in enumerate(pixel_points.T):
         cv2.circle(img, point.astype(int), sizes[i], bgr[:, i].tolist())
-
