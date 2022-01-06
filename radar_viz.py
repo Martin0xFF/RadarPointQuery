@@ -5,7 +5,7 @@ Visualize radar data by projecting the points into a provided image
 import numpy as np
 import cv2
 
-def colour_bgr(values):
+def colour_bgr(values, minimum=0, maximum=5):
     '''
     A Crude range to colour function:
 
@@ -15,14 +15,14 @@ def colour_bgr(values):
         - nx3 ndarray of data corresponding to the
         values of the input array
     '''
-    minimum, maximum = np.min(values), np.max(values)
+    #minimum, maximum = np.min(values), np.max(values)
     ratio = 2*(values-minimum)/(maximum - minimum)
     blu = np.maximum(0, 255*(1-ratio)).astype(int)
     red = np.maximum(0, 255*(ratio-1)).astype(int)
     gre = 255 - blu - red
     return np.vstack([blu, gre, red])
 
-def weight_from_range(ranges, min_circle=2, max_circle=20):
+def weight_from_range(ranges, min_circle=20, max_circle=125):
     '''
     Convert an array of values to the sizes of a circle
         -ranges is of length n
@@ -31,7 +31,8 @@ def weight_from_range(ranges, min_circle=2, max_circle=20):
         max_circle
     '''
     ranges = 1/(ranges + 1)
-    minimum, maximum = np.min(ranges), np.max(ranges)
+    # minimum, maximum = np.min(ranges), np.max(ranges)
+    minimum, maximum = 0, 100
     ratio = (ranges-minimum)/(maximum - minimum)
     return (max_circle - min_circle)*ratio + min_circle
 
@@ -72,4 +73,4 @@ def project_radarpoints_onto_img(img, pixel_points, radar_cross, velocity, radar
                                       np.square(radar_points[1, :]))).astype(int)
 
     for i, point in enumerate(pixel_points.T):
-        cv2.circle(img, point.astype(int), sizes[i], bgr[:, i].tolist())
+        cv2.circle(img, point.astype(int), sizes[i], bgr[:, i].tolist(), -1)
