@@ -16,13 +16,13 @@ def colour_bgr(values, minimum=0, maximum=5):
         values of the input array
     '''
     #minimum, maximum = np.min(values), np.max(values)
-    ratio = 2*(values-minimum)/(maximum - minimum)
+    ratio = np.minimum(1, 2*(values-minimum)/(maximum - minimum))
     blu = np.maximum(0, 255*(1-ratio)).astype(int)
     red = np.maximum(0, 255*(ratio-1)).astype(int)
     gre = 255 - blu - red
     return np.vstack([blu, gre, red])
 
-def weight_from_range(ranges, min_circle=20, max_circle=125):
+def weight_from_range(ranges, min_circle=1, max_circle=100):
     '''
     Convert an array of values to the sizes of a circle
         -ranges is of length n
@@ -32,7 +32,7 @@ def weight_from_range(ranges, min_circle=20, max_circle=125):
     '''
     ranges = 1/(ranges + 1)
     # minimum, maximum = np.min(ranges), np.max(ranges)
-    minimum, maximum = 0, 100
+    minimum, maximum = 0, 1
     ratio = (ranges-minimum)/(maximum - minimum)
     return (max_circle - min_circle)*ratio + min_circle
 
