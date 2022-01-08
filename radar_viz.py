@@ -74,3 +74,30 @@ def project_radarpoints_onto_img(img, pixel_points, radar_cross, velocity, radar
 
     for i, point in enumerate(pixel_points.T):
         cv2.circle(img, point.astype(int), sizes[i], bgr[:, i].tolist(), -1)
+
+def within_box(bb, points):
+    '''
+    bb - bounding box defined as [xl, yl, xr, yr]
+        - (xl,yl) position of top - left corner of box
+        - (xr, yr) position of bottom - right corner of box
+    points - ndarray with shape [:3, :n], n is the number of points
+    '''
+    in_box = (
+        (points[0, :]>bb[0]) & (points[0, :]<bb[2]) &
+        (points[1, :]>bb[1]) & (points[1, :]<bb[3])
+    )
+
+    return points[:, in_box]
+
+if __name__ == "__main__":
+
+
+    # Bounding Box test
+    bb = [0, 0, 10, 10]
+    pts = np.array([
+        [1,100,2, 10 ],
+        [1,5,5, 10 ],
+        [69,100,200, 10],
+    ])
+
+    print(within_box(bb, pts))
