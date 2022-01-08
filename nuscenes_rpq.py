@@ -12,7 +12,7 @@ from scipy.spatial.transform import Rotation as Rot
 from nuscenes.nuscenes import NuScenes
 from nuscenes.utils.data_classes import RadarPointCloud
 
-from radar_viz import project_radarpoints_onto_img, to_image_pixel
+from radar_point_query import project_radarpoints_onto_img, to_image_pixel
 
 if __name__ == "__main__":
     # Scipy uses quaterions of the form [x, y, z, w]

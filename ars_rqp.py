@@ -6,7 +6,7 @@ import point_cloud2
 from numpy.linalg import inv
 
 from scipy.spatial.transform import Rotation as R
-from radar_viz import project_radarpoints_onto_img, to_image_pixel
+from radar_point_query import project_radarpoints_onto_img, to_image_pixel
 
 from rclpy.node import Node
 from sensor_msgs.msg import PointCloud2, CompressedImage
@@ -24,7 +24,7 @@ K = [
     [0.000000, 0.000000, 1.000000]
 ]
 
-
+# These don't seem to work
 Tvm = np.array([
     [0, 1, 0, 0.64],
     [0, 0, 1, 0],
@@ -47,8 +47,14 @@ Tiv = np.array([
     [0,0,0,1]
 ])
 
-Tmr = inv(Tvm)@inv(Tiv)@Tir
-T_cam_radar = inv(Tmr)
+Tmr = np.array([
+    [0, 0, 1, -2.090],
+    [0,-1, 0, 0],
+    [1, 0, 0, 1.215],
+    [0,0,0,1]
+])
+
+T_cam_radar = Tmr
 
 class RadarPointQuerySub(Node):
     def __init__ (self):
